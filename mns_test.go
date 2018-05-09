@@ -1,7 +1,9 @@
 package mns
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"testing"
 	"time"
@@ -26,7 +28,12 @@ func (cd *ConsumerDemo) Error(err error) error {
 }
 
 func Init() {
-	cfg := NewQueueCfg("host", "accessID", "accessSecret", "TEST", 1000)
+	var cfg QueueCfg
+	b, err := ioutil.ReadFile("./mns.json")
+	if err != nil {
+		panic(err.Error())
+	}
+	json.Unmarshal(b, &cfg)
 	c = NewClient(cfg, &ConsumerDemo{})
 	q = NewQProducer(c)
 }
@@ -48,7 +55,7 @@ func TestBatchSendMsg(t *testing.T) {
 
 	var msg1 Message
 	msg1.MessageBody = []byte("hello world1")
-	if err := q.BatchSendMsg("TEST", msg, msg1); err != nil {
+	if err := q.BatchSendMsg("A-UPDATE-TEST", msg, msg1); err != nil {
 		t.Error(err.Error())
 	}
 }
@@ -63,7 +70,7 @@ func TestRecvMsg(t *testing.T) {
 			var msg Message
 			msg.Priority = 0
 			msg.MessageBody = []byte(fmt.Sprintf("hello world-%d", i))
-			if err := q.SendMsg("TEST", msg); err != nil {
+			if err := q.SendMsg("A-UPDATE-TEST", msg); err != nil {
 				t.Error(err.Error())
 			}
 			i++
